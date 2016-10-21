@@ -1,13 +1,19 @@
 /** Slug Pug Namespace **/
 
 var SlugPug = SlugPug || {
+    Initialized: false,
     Context: null,
     Sprites: {
         Body: null,
         Head: null,
         Tail: null,
-        Background: null
     },
+    Background: null,
+    BodyParts: [
+        [0,0], // Head
+        [1,0], // Body
+        [2,0]  // Tail
+    ],
     Grid: {
         width: 800,
         height: 400,
@@ -66,14 +72,69 @@ function init() {
     var dogTail = new SlugPug.Sprite(dogSprites,0,100,50,50);
     SlugPug.Grid.init();
     
-    SlugPug.drawSprite(dogHead, 0, 0);
-    SlugPug.drawSprite(dogTail, 1, 0);
-    SlugPug.drawSprite(dogBody, SlugPug.Grid.cells.length-1, SlugPug.Grid.cells[0].length-1);
-    
-    
     SlugPug.Sprites.Body = dogBody;
     SlugPug.Sprites.Head = dogHead;
     SlugPug.Sprites.Tail = dogTail;
+    SlugPug.Background = bgImg;
+    
+    SlugPug.Initialized = true;
+}
+
+function drawFrame() {
+    if (!SlugPug.Initialized) return;
+    
+    SlugPug.Context.clearRect(0,0,SlugPug.Grid.width,SlugPug.Grid.height);
+    SlugPug.Context.drawImage(SlugPug.Background,0,0);
+    
+    // Draw Head and Tail first
+    var lastPos = SlugPug.BodyParts.length - 1;
+    SlugPug.drawSprite(SlugPug.Sprites.Head, SlugPug.BodyParts[0][0], SlugPug.BodyParts[0][1]);
+    SlugPug.drawSprite(SlugPug.Sprites.Tail, SlugPug.BodyParts[lastPos][0], SlugPug.BodyParts[lastPos][1]);
+    
+    // Draw Body Parts
+    for (var i = 1; i < lastPos; i++) {
+        SlugPug.drawSprite(SlugPug.Sprites.Body, SlugPug.BodyParts[i][0], SlugPug.BodyParts[i][1]);
+    }
+}
+
+function moveLeft() {
+    var gridWidth = 15;
+    var gridHeight = 7;
+    
+    SlugPug.BodyParts[0][0]--;
+    if (SlugPug.BodyParts[0][0] < 0) {
+        SlugPug.BodyParts[0][0] = gridWidth;
+    }
+}
+
+function moveRight() {
+    var gridWidth = 15;
+    var gridHeight = 7;
+    
+    SlugPug.BodyParts[0][0]++;
+    if (SlugPug.BodyParts[0][0] > gridWidth) {
+        SlugPug.BodyParts[0][0] = 0;
+    }
+}
+
+function moveUp() {
+    var gridWidth = 15;
+    var gridHeight = 7;
+    
+    SlugPug.BodyParts[0][1]--;
+    if (SlugPug.BodyParts[0][1] < 0) {
+        SlugPug.BodyParts[0][1] = gridHeight;
+    }
+}
+
+function moveDown() {
+    var gridWidth = 15;
+    var gridHeight = 7;
+    
+    SlugPug.BodyParts[0][1]++;
+    if (SlugPug.BodyParts[0][1] > gridHeight) {
+        SlugPug.BodyParts[0][1] = 0;
+    }
 }
 
 /** Slug Pug Classes **/
@@ -91,14 +152,13 @@ SlugPug.BodyPart = function(x, y) {
     this.y = y;
 };
 
-SlugPug.Vector2 = function(x, y) {
+SlugPug.Vector2 = function(x,y) {
     this.x = x;
     this.y = y;
-};
-    
-SlugPug.Vector2.prototype.calc = function() {
-    return this.x + this.y;
-};
+    this.calc = function() {
+        return this.x + this.y;
+    }
+}
 
 /** Game Loop and Initialization **/
 
@@ -106,6 +166,7 @@ window.main = function () {
   window.requestAnimationFrame( main );
     // Whatever your main loop needs to do.
     update();
+    drawFrame();
 };
 
 main(); //Start the cycle.
@@ -122,16 +183,16 @@ window.onkeyup = function(evt) {
     console.log(evt);
     switch(evt.key) {
         case "ArrowLeft":
-            alert("Left");
+            moveLeft();
             break;
         case "ArrowRight":
-            alert("Right");
+            moveRight();
             break;
         case "ArrowUp":
-            alert("Up");
+            moveUp();
             break;
         case "ArrowDown":
-            alert("Down");
+            moveDown();
             break;
     }
 };
