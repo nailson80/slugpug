@@ -14,6 +14,12 @@ var SlugPug = SlugPug || {
         [1,0], // Body
         [2,0]  // Tail
     ],
+    Direction: {
+        Left: 0,
+        Right: 1,
+        Up: 2,
+        Down: 3
+    },
     Grid: {
         width: 800,
         height: 400,
@@ -77,6 +83,9 @@ function init() {
     SlugPug.Sprites.Tail = dogTail;
     SlugPug.Background = bgImg;
     
+    SlugPug.CurrentDirection = SlugPug.Direction.Left;
+    SlugPug.PreviousDirection = SlugPug.Direction.Left;
+    
     SlugPug.Initialized = true;
 }
 
@@ -98,43 +107,59 @@ function drawFrame() {
 }
 
 function moveLeft() {
-    var gridWidth = 15;
-    var gridHeight = 7;
-    
-    SlugPug.BodyParts[0][0]--;
-    if (SlugPug.BodyParts[0][0] < 0) {
-        SlugPug.BodyParts[0][0] = gridWidth;
-    }
+    SlugPug.PreviousDirection = SlugPug.CurrentDirection;
+    SlugPug.CurrentDirection = SlugPug.Direction.Left;
 }
 
 function moveRight() {
-    var gridWidth = 15;
-    var gridHeight = 7;
-    
-    SlugPug.BodyParts[0][0]++;
-    if (SlugPug.BodyParts[0][0] > gridWidth) {
-        SlugPug.BodyParts[0][0] = 0;
-    }
+    SlugPug.PreviousDirection = SlugPug.CurrentDirection;
+    SlugPug.CurrentDirection = SlugPug.Direction.Right;
 }
 
 function moveUp() {
-    var gridWidth = 15;
-    var gridHeight = 7;
-    
-    SlugPug.BodyParts[0][1]--;
-    if (SlugPug.BodyParts[0][1] < 0) {
-        SlugPug.BodyParts[0][1] = gridHeight;
-    }
+    SlugPug.PreviousDirection = SlugPug.CurrentDirection;
+    SlugPug.CurrentDirection = SlugPug.Direction.Up;
 }
 
 function moveDown() {
+    SlugPug.PreviousDirection = SlugPug.CurrentDirection;
+    SlugPug.CurrentDirection = SlugPug.Direction.Down;
+}
+
+function advanceDog() {
+    if (!SlugPug.Initialized) return;
+    
     var gridWidth = 15;
     var gridHeight = 7;
+    var head = SlugPug.BodyParts[0];
+    var len = SlugPug.BodyParts.length - 1;
+    var direction = SlugPug.CurrentDirection;
     
-    SlugPug.BodyParts[0][1]++;
-    if (SlugPug.BodyParts[0][1] > gridHeight) {
-        SlugPug.BodyParts[0][1] = 0;
+    for (var i = len; i > 0; i--) {
+        var before = SlugPug.BodyParts[i-1];
+        var part = SlugPug.BodyParts[i];
+        
+        part[0] = before[0];
+        part[1] = before[1];
     }
+    
+    if (direction == SlugPug.Direction.Left)
+        head[0]--;
+    if (direction == SlugPug.Direction.Up)
+        head[1]--;
+    if (direction == SlugPug.Direction.Right)
+        head[0]++;
+    if (direction == SlugPug.Direction.Down)
+        head[1]++;
+    
+    if (head[0] < 0)
+        head[0] = gridWidth;
+    if (head[0] > gridWidth)
+        head[0] = 0;
+    if (head[1] < 0)
+        head[1] = gridHeight;
+    if (head[1] > gridHeight)
+        head[1] = 0;
 }
 
 /** Slug Pug Classes **/
@@ -166,6 +191,7 @@ window.main = function () {
   window.requestAnimationFrame( main );
     // Whatever your main loop needs to do.
     update();
+    advanceDog();
     drawFrame();
 };
 
@@ -180,7 +206,6 @@ window.addEventListener("DOMContentLoaded", function() {
 });
 
 window.onkeyup = function(evt) {
-    console.log(evt);
     switch(evt.key) {
         case "ArrowLeft":
             moveLeft();
