@@ -12,14 +12,24 @@ var SlugPug = SlugPug || {
     BodyParts: [
         [0,0], // Head
         [1,0], // Body
-        [2,0]  // Tail
+        [2,0],
+        [3,0]  // Tail
     ],
+    Poop: {
+        x: 4,
+        y: 0
+    },
+    Treat: {
+        x: 0,
+        y: 0
+    },
     Direction: {
         Left: 0,
         Right: 1,
         Up: 2,
         Down: 3
     },
+    TimeOut: 300,
     Grid: {
         width: 800,
         height: 400,
@@ -162,6 +172,49 @@ function advanceDog() {
         head[1] = 0;
 }
 
+function placeDogPoop() {
+    var gridWidth = 15;
+    var gridHeight = 7;
+    
+    var poopX = getRandomNumber(0, gridWidth);
+    var poopY = getRandomNumber(0, gridHeight);
+    
+    if (poopX > gridWidth)
+        poopX = 0;
+    if (poopY > gridHeight)
+        poopY = 0;
+    
+    var foundEmptyCell = false;
+    while(true) {
+        for (var i = 0; i < SlugPug.BodyParts.length; i++) {
+            if (SlugPug.BodyParts[i][0] != poopX || SlugPug.BodyParts[i][1] != poopY) {
+                foundEmptyCell = true;
+                break;
+            }
+        }
+        
+        if(foundEmptyCell) {
+            break;
+        }
+        
+        poopX++;
+        if (poopX > gridWidth) {
+            poopX = 0;
+            poopY++;
+            if (poopX > gridHeight) {
+                poopY = 0;
+            }
+        }
+        
+    }
+    return {x: poopX, y: poopY};
+}
+
+// Returns a random number between min (inclusive) and max (exclusive)
+function getRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
 /** Slug Pug Classes **/
 
 SlugPug.Sprite = function(img, x, y, width, height) {
@@ -188,7 +241,7 @@ SlugPug.Vector2 = function(x,y) {
 /** Game Loop and Initialization **/
 
 window.main = function () {
-  window.requestAnimationFrame( main );
+  setTimeout(function(){window.requestAnimationFrame( main );},SlugPug.TimeOut);
     // Whatever your main loop needs to do.
     update();
     advanceDog();
