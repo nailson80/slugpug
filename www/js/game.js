@@ -7,6 +7,7 @@ var SlugPug = SlugPug || {
         Body: null,
         Head: null,
         Tail: null,
+        Treats: []
     },
     Background: null,
     BodyParts: [
@@ -79,13 +80,17 @@ function init() {
     
     var dogSprites = new Image(200,200);
     dogSprites.src = "images/pug-sprites.png";
-    dogSprites.onload = function() {
-        
-    };
     
+    var treatSprites = new Image(100,100);
+    treatSprites.src = "images/treat-sprites.png";
+    
+    // Create sprites for the dog
     var dogBody = new SlugPug.Sprite(dogSprites,0,0,50,50);
     var dogHead = new SlugPug.Sprite(dogSprites,50,0,50,50);
     var dogTail = new SlugPug.Sprite(dogSprites,0,100,50,50);
+    
+    // Create sprites for the treats
+    
     SlugPug.Grid.init();
     
     SlugPug.Sprites.Body = dogBody;
