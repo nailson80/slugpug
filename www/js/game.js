@@ -31,6 +31,13 @@ var SlugPug = SlugPug || {
         Down: 3
     },
     TimeOut: 300,
+    LastTimeStamp: 0,
+    Tick: {
+        Initial: 0.5,
+        Decrement: 0.05,
+        TickTime: 0,
+        CurrentTick: 0.5
+    },
     Grid: {
         width: 800,
         height: 400,
@@ -90,6 +97,10 @@ function init() {
     var dogTail = new SlugPug.Sprite(dogSprites,0,100,50,50);
     
     // Create sprites for the treats
+    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
+    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,50,0,50,50));
+    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
+    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
     
     SlugPug.Grid.init();
     
@@ -102,6 +113,7 @@ function init() {
     SlugPug.PreviousDirection = SlugPug.Direction.Left;
     
     SlugPug.Initialized = true;
+    SlugPug.LastTimeStamp = getTimeStamp();
 }
 
 function drawFrame() {
@@ -141,40 +153,46 @@ function moveDown() {
     SlugPug.CurrentDirection = SlugPug.Direction.Down;
 }
 
-function advanceDog() {
+function advanceDog(deltaTime) {
     if (!SlugPug.Initialized) return;
     
-    var gridWidth = 15;
-    var gridHeight = 7;
-    var head = SlugPug.BodyParts[0];
-    var len = SlugPug.BodyParts.length - 1;
-    var direction = SlugPug.CurrentDirection;
-    
-    for (var i = len; i > 0; i--) {
-        var before = SlugPug.BodyParts[i-1];
-        var part = SlugPug.BodyParts[i];
+    SlugPug.Tick.TickTime += deltaTime;
+
+    while (SlugPug.Tick.TickTime > SlugPug.Tick.CurrentTick) {
+        SlugPug.Tick.TickTime -= SlugPug.Tick.CurrentTick;
         
-        part[0] = before[0];
-        part[1] = before[1];
+        var gridWidth = 15;
+        var gridHeight = 7;
+        var head = SlugPug.BodyParts[0];
+        var len = SlugPug.BodyParts.length - 1;
+        var direction = SlugPug.CurrentDirection;
+
+        for (var i = len; i > 0; i--) {
+            var before = SlugPug.BodyParts[i-1];
+            var part = SlugPug.BodyParts[i];
+
+            part[0] = before[0];
+            part[1] = before[1];
+        }
+
+        if (direction == SlugPug.Direction.Left)
+            head[0]--;
+        if (direction == SlugPug.Direction.Up)
+            head[1]--;
+        if (direction == SlugPug.Direction.Right)
+            head[0]++;
+        if (direction == SlugPug.Direction.Down)
+            head[1]++;
+
+        if (head[0] < 0)
+            head[0] = gridWidth;
+        if (head[0] > gridWidth)
+            head[0] = 0;
+        if (head[1] < 0)
+            head[1] = gridHeight;
+        if (head[1] > gridHeight)
+            head[1] = 0;
     }
-    
-    if (direction == SlugPug.Direction.Left)
-        head[0]--;
-    if (direction == SlugPug.Direction.Up)
-        head[1]--;
-    if (direction == SlugPug.Direction.Right)
-        head[0]++;
-    if (direction == SlugPug.Direction.Down)
-        head[1]++;
-    
-    if (head[0] < 0)
-        head[0] = gridWidth;
-    if (head[0] > gridWidth)
-        head[0] = 0;
-    if (head[1] < 0)
-        head[1] = gridHeight;
-    if (head[1] > gridHeight)
-        head[1] = 0;
 }
 
 function placeDogPoop() {
@@ -220,6 +238,19 @@ function getRandomNumber(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
+function getTimeStamp() {
+    var ts = 0;
+    if( window.performance && performance.now ) {
+        ts = window.performance.now().toFixed(3);
+    }
+    else {
+        var timeStart = Date.now();
+        ts = (Date.now() - timeStart).toFixed(3);
+    }
+    return ts / 1000;
+}
+
+
 /** Slug Pug Classes **/
 
 SlugPug.Sprite = function(img, x, y, width, height) {
@@ -246,17 +277,22 @@ SlugPug.Vector2 = function(x,y) {
 /** Game Loop and Initialization **/
 
 window.main = function () {
-  setTimeout(function(){window.requestAnimationFrame( main );},SlugPug.TimeOut);
     // Whatever your main loop needs to do.
-    update();
-    advanceDog();
-    drawFrame();
+    var now = getTimeStamp();
+    var deltaTime = now - SlugPug.LastTimeStamp;
+    
+    update(deltaTime);
+    
+    SlugPug.LastTimeStamp = now;
+    window.requestAnimationFrame( main );
 };
 
 main(); //Start the cycle.
 
-function update() {
-    //console.log("test");
+function update(deltaTime) {
+    //console.log(deltaTime);
+    advanceDog(deltaTime);
+    drawFrame();
 }
 
 window.addEventListener("DOMContentLoaded", function() {
