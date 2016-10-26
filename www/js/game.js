@@ -2,11 +2,15 @@
 
 var SlugPug = SlugPug || {
     Initialized: false,
+    GameState: null,
+    Score: 0,
+    ScoreIncrement: 10,
     Context: null,
     Sprites: {
         Body: null,
         Head: null,
         Tail: null,
+        Poop: null,
         Treats: []
     },
     Background: null,
@@ -21,8 +25,8 @@ var SlugPug = SlugPug || {
         y: 0
     },
     Treat: {
-        x: 0,
-        y: 0
+        x: 3,
+        y: 3
     },
     Direction: {
         Left: 0,
@@ -53,6 +57,9 @@ var SlugPug = SlugPug || {
         
         //context.drawImage(sprite.img, sprite.x, sprite.y, sprite.width, sprite.height, x, y, sprite.width, sprite.height);
         SlugPug.Context.drawImage(sprite.img, sprite.x, sprite.y, sprite.width, sprite.height, x * sprite.width, y * sprite.height, sprite.width, sprite.height);
+    },
+    gameStates: function() {
+        return {Running: 0, Paused: 1, GameOver: 2};
     }
 };
 
@@ -75,6 +82,9 @@ function init() {
     var treatSprites = new Image(100,100);
     treatSprites.src = "images/treat-sprites.png";
     
+    var poopSprites = new Image(250,50);
+    poopSprites.src = "images/poop-sprites.png";
+    
     // Create sprites for the dog
     var dogBody = new SlugPug.Sprite(dogSprites,0,0,50,50);
     var dogHead = new SlugPug.Sprite(dogSprites,50,0,50,50);
@@ -86,6 +96,9 @@ function init() {
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
     
+    // Create sprites for the poop
+    SlugPug.Sprites.Poop = new SlugPug.Sprite(poopSprites,0,0,50,50);
+    
     SlugPug.Sprites.Body = dogBody;
     SlugPug.Sprites.Head = dogHead;
     SlugPug.Sprites.Tail = dogTail;
@@ -95,6 +108,7 @@ function init() {
     SlugPug.PreviousDirection = SlugPug.Direction.Left;
     
     SlugPug.Initialized = true;
+    SlugPug.GameState = SlugPug.gameStates().Paused;
     SlugPug.LastTimeStamp = getTimeStamp();
 }
 
@@ -103,6 +117,12 @@ function drawFrame() {
     
     SlugPug.Context.clearRect(0,0,SlugPug.Grid.width,SlugPug.Grid.height);
     SlugPug.Context.drawImage(SlugPug.Background,0,0);
+    
+    // Draw Treat
+    SlugPug.drawSprite(SlugPug.Sprites.Treats[0],SlugPug.Treat.x, SlugPug.Treat.y);
+    
+    // Draw Poop
+    SlugPug.drawSprite(SlugPug.Sprites.Poop, SlugPug.Poop.x, SlugPug.Poop.y);
     
     // Draw Head and Tail first
     var lastPos = SlugPug.BodyParts.length - 1;
@@ -174,25 +194,33 @@ function advanceDog(deltaTime) {
             head[1] = gridHeight;
         if (head[1] > gridHeight)
             head[1] = 0;
+        
+        // Check for collision with treat
+        if (head[0] == SlugPug.Treat.x && head[1] == SlugPug.Treat.y) {
+            SlugPug.Score += SlugPug.ScoreIncrement;
+            SlugPug.Treat = placeObject();
+            SlugPug.BodyParts.push([]);
+            console.log(SlugPug.Score);
+        }
     }
 }
 
-function placeDogPoop() {
+function placeObject() {
     var gridWidth = 15;
     var gridHeight = 7;
     
-    var poopX = getRandomNumber(0, gridWidth);
-    var poopY = getRandomNumber(0, gridHeight);
+    var objectX = getRandomNumber(0, gridWidth);
+    var objectY = getRandomNumber(0, gridHeight);
     
-    if (poopX > gridWidth)
-        poopX = 0;
-    if (poopY > gridHeight)
-        poopY = 0;
+    if (objectX > gridWidth)
+        objectX = 0;
+    if (objectY > gridHeight)
+        objectY = 0;
     
     var foundEmptyCell = false;
     while(true) {
         for (var i = 0; i < SlugPug.BodyParts.length; i++) {
-            if (SlugPug.BodyParts[i][0] != poopX || SlugPug.BodyParts[i][1] != poopY) {
+            if (SlugPug.BodyParts[i][0] != objectX || SlugPug.BodyParts[i][1] != objectY) {
                 foundEmptyCell = true;
                 break;
             }
@@ -202,17 +230,18 @@ function placeDogPoop() {
             break;
         }
         
-        poopX++;
-        if (poopX > gridWidth) {
-            poopX = 0;
-            poopY++;
-            if (poopX > gridHeight) {
-                poopY = 0;
+        objectX++;
+        if (objectX > gridWidth) {
+            objectX = 0;
+            objectY++;
+            if (objectX > gridHeight) {
+                objectY = 0;
             }
         }
         
     }
-    return {x: poopX, y: poopY};
+    
+    return {x: objectX, y: objectY};
 }
 
 // Returns a random number between min (inclusive) and max (exclusive)
