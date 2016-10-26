@@ -42,23 +42,7 @@ var SlugPug = SlugPug || {
         width: 800,
         height: 400,
         cellWidth: 50,
-        cellHeight: 50,
-        cells: [],
-        init: function() {
-            var _this = SlugPug.Grid;
-            var rows = _this.height / _this.cellHeight;
-            var cols = _this.width / _this.cellWidth;
-
-            var grid = new Array(cols);
-            for (var i = 0; i < cols; i++) {
-                grid[i] = new Array(rows);
-                for (var j = 0; j < rows; j++) {
-                    grid[i][j] = {x: i*50, y: j*50, occupied: false};
-                }
-            }
-            _this.cells = grid;
-            return _this.cells;
-        }
+        cellHeight: 50
     },
     init: function() {
         init();
@@ -101,8 +85,6 @@ function init() {
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,50,0,50,50));
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
-    
-    SlugPug.Grid.init();
     
     SlugPug.Sprites.Body = dogBody;
     SlugPug.Sprites.Head = dogHead;
