@@ -10,7 +10,7 @@ var SlugPug = SlugPug || {
         Body: null,
         Head: null,
         Tail: null,
-        Poop: null,
+        Poop: [],
         Treats: []
     },
     Background: null,
@@ -21,6 +21,7 @@ var SlugPug = SlugPug || {
         [3,0]  // Tail
     ],
     Poop: {
+        stateTime: 0,
         x: 4,
         y: 0
     },
@@ -34,6 +35,7 @@ var SlugPug = SlugPug || {
         Up: 2,
         Down: 3
     },
+    DeltaTime: 0,
     TimeOut: 300,
     LastTimeStamp: 0,
     Tick: {
@@ -53,9 +55,10 @@ var SlugPug = SlugPug || {
     },
     drawSprite: function(sprite, x, y) {
         // Make sure the the Context has been assigned
-        if (SlugPug.Context == null) return;
+        // and the sprite is not null, otherwise an error
+        // will occur, especially changing browser tabs
+        if (SlugPug.Context == null || sprite == null) return;
         
-        //context.drawImage(sprite.img, sprite.x, sprite.y, sprite.width, sprite.height, x, y, sprite.width, sprite.height);
         SlugPug.Context.drawImage(sprite.img, sprite.x, sprite.y, sprite.width, sprite.height, x * sprite.width, y * sprite.height, sprite.width, sprite.height);
     },
     gameStates: function() {
@@ -93,11 +96,15 @@ function init() {
     // Create sprites for the treats
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,50,0,50,50));
-    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
-    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
+    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,50,50,50));
+    SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,50,50,50,50));
     
     // Create sprites for the poop
-    SlugPug.Sprites.Poop = new SlugPug.Sprite(poopSprites,0,0,50,50);
+    SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,0,0,50,50));
+    SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,50,0,50,50));
+    SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,100,0,50,50));
+    SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,150,0,50,50));
+    SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,200,0,50,50));
     
     SlugPug.Sprites.Body = dogBody;
     SlugPug.Sprites.Head = dogHead;
@@ -110,6 +117,8 @@ function init() {
     SlugPug.Initialized = true;
     SlugPug.GameState = SlugPug.gameStates().Paused;
     SlugPug.LastTimeStamp = getTimeStamp();
+    
+    window.anim = new SlugPug.Animation(.15, SlugPug.Sprites.Poop);
 }
 
 function drawFrame() {
@@ -122,7 +131,12 @@ function drawFrame() {
     SlugPug.drawSprite(SlugPug.Sprites.Treats[0],SlugPug.Treat.x, SlugPug.Treat.y);
     
     // Draw Poop
-    SlugPug.drawSprite(SlugPug.Sprites.Poop, SlugPug.Poop.x, SlugPug.Poop.y);
+    //SlugPug.drawSprite(SlugPug.Sprites.Poop, SlugPug.Poop.x, SlugPug.Poop.y);
+    if (window.anim != undefined) {
+        var f = window.anim.getKeyFrame(SlugPug.Poop.stateTime);
+        console.log(f);
+        SlugPug.drawSprite(SlugPug.Sprites.Poop[f], SlugPug.Poop.x, SlugPug.Poop.y);
+    }
     
     // Draw Head and Tail first
     var lastPos = SlugPug.BodyParts.length - 1;
@@ -252,13 +266,13 @@ function getRandomNumber(min, max) {
 function getTimeStamp() {
     var ts = 0;
     if( window.performance && performance.now ) {
-        ts = window.performance.now().toFixed(3);
+        ts = window.performance.now() / 1000;
     }
     else {
         var timeStart = Date.now();
-        ts = (Date.now() - timeStart).toFixed(3);
+        ts = (Date.now() - timeStart);
     }
-    return ts / 1000;
+    return ts;
 }
 
 
@@ -285,25 +299,41 @@ SlugPug.Vector2 = function(x,y) {
     }
 }
 
+SlugPug.Animation = function(frameDuration, keyFrames) {
+    this.frameDuration = frameDuration;
+    this.keyFrames = keyFrames;
+    
+    this.getKeyFrame = function(stateTime) {
+        var frameNumber = stateTime / frameDuration;
+        //frameNumber = Math.min(this.keyFrames.length-1, frameNumber);
+        frameNumber = frameNumber % this.keyFrames.length;
+        return Math.floor(frameNumber);
+    }
+}
+
 /** Game Loop and Initialization **/
 
 window.main = function () {
-    // Whatever your main loop needs to do.
-    var now = getTimeStamp();
-    var deltaTime = now - SlugPug.LastTimeStamp;
+    //Whatever your main loop needs to do.
+    //setTimeout(function() {  
+    //}, 1000 / 16);
     
+    var deltaTime = (getTimeStamp() - SlugPug.LastTimeStamp)
+    SlugPug.LastTimeStamp = getTimeStamp();
+    SlugPug.DeltaTime = deltaTime;
+
     update(deltaTime);
-    
-    SlugPug.LastTimeStamp = now;
     window.requestAnimationFrame( main );
 };
 
 main(); //Start the cycle.
 
 function update(deltaTime) {
-    //console.log(deltaTime);
+    SlugPug.Poop.stateTime += deltaTime;
     advanceDog(deltaTime);
     drawFrame();
+    //if (window.anim != undefined)
+    //    console.log(window.anim.getKeyFrame(deltaTime));
 }
 
 window.addEventListener("DOMContentLoaded", function() {
