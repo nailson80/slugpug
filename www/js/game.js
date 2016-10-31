@@ -8,10 +8,15 @@ var SlugPug = SlugPug || {
     Context: null,
     Sprites: {
         Body: null,
-        Head: null,
-        Tail: null,
+        Head: [],
+        Tail: [],
         Poop: [],
         Treats: []
+    },
+    Animations: {
+        Poop: null,
+        Head: null,
+        Tail: null,
     },
     Background: null,
     BodyParts: [
@@ -90,8 +95,6 @@ function init() {
     
     // Create sprites for the dog
     var dogBody = new SlugPug.Sprite(dogSprites,0,0,50,50);
-    var dogHead = new SlugPug.Sprite(dogSprites,50,0,50,50);
-    var dogTail = new SlugPug.Sprite(dogSprites,0,100,50,50);
     
     // Create sprites for the treats
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,0,50,50));
@@ -99,26 +102,43 @@ function init() {
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,0,50,50,50));
     SlugPug.Sprites.Treats.push(new SlugPug.Sprite(treatSprites,50,50,50,50));
     
-    // Create sprites for the poop
+    // Create sprites for the poop animation
     SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,0,0,50,50));
     SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,50,0,50,50));
     SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,100,0,50,50));
     SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,150,0,50,50));
     SlugPug.Sprites.Poop.push(new SlugPug.Sprite(poopSprites,200,0,50,50));
     
+    // Create sprites for the head animation
+    SlugPug.Sprites.Head.push(new SlugPug.Sprite(dogSprites,50,0,50,50));
+    SlugPug.Sprites.Head.push(new SlugPug.Sprite(dogSprites,100,0,50,50));
+    SlugPug.Sprites.Head.push(new SlugPug.Sprite(dogSprites,0,50,50,50));
+    SlugPug.Sprites.Head.push(new SlugPug.Sprite(dogSprites,50,50,50,50));
+    SlugPug.Sprites.Head.push(new SlugPug.Sprite(dogSprites,100,50,50,50));
+    
+    // Create sprites for the tail animation
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,0,100,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,50,100,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,100,100,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,150,100,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,0,150,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,50,150,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,100,150,50,50));
+    SlugPug.Sprites.Tail.push(new SlugPug.Sprite(dogSprites,150,150,50,50));
+    
     SlugPug.Sprites.Body = dogBody;
-    SlugPug.Sprites.Head = dogHead;
-    SlugPug.Sprites.Tail = dogTail;
     SlugPug.Background = bgImg;
     
     SlugPug.CurrentDirection = SlugPug.Direction.Left;
     SlugPug.PreviousDirection = SlugPug.Direction.Left;
     
-    SlugPug.Initialized = true;
+    SlugPug.Animations.Poop = new SlugPug.Animation(.15, SlugPug.Sprites.Poop);
+    SlugPug.Animations.Head = new SlugPug.Animation(.2, SlugPug.Sprites.Head);
+    SlugPug.Animations.Tail = new SlugPug.Animation(.2, SlugPug.Sprites.Tail);
+    
     SlugPug.GameState = SlugPug.gameStates().Paused;
     SlugPug.LastTimeStamp = getTimeStamp();
-    
-    window.anim = new SlugPug.Animation(.15, SlugPug.Sprites.Poop);
+    SlugPug.Initialized = true;
 }
 
 function drawFrame() {
@@ -130,18 +150,24 @@ function drawFrame() {
     // Draw Treat
     SlugPug.drawSprite(SlugPug.Sprites.Treats[0],SlugPug.Treat.x, SlugPug.Treat.y);
     
-    // Draw Poop
-    //SlugPug.drawSprite(SlugPug.Sprites.Poop, SlugPug.Poop.x, SlugPug.Poop.y);
-    if (window.anim != undefined) {
-        var f = window.anim.getKeyFrame(SlugPug.Poop.stateTime);
-        console.log(f);
+    // Draw Poop Animation
+    if (SlugPug.Animations.Poop != null) {
+        var f = SlugPug.Animations.Poop.getKeyFrame(SlugPug.Poop.stateTime);
         SlugPug.drawSprite(SlugPug.Sprites.Poop[f], SlugPug.Poop.x, SlugPug.Poop.y);
     }
     
-    // Draw Head and Tail first
-    var lastPos = SlugPug.BodyParts.length - 1;
-    SlugPug.drawSprite(SlugPug.Sprites.Head, SlugPug.BodyParts[0][0], SlugPug.BodyParts[0][1]);
-    SlugPug.drawSprite(SlugPug.Sprites.Tail, SlugPug.BodyParts[lastPos][0], SlugPug.BodyParts[lastPos][1]);
+    // Draw Head Animation
+    if (SlugPug.Animations.Head != null) {
+        var f = SlugPug.Animations.Head.getKeyFrame(SlugPug.Poop.stateTime);
+        SlugPug.drawSprite(SlugPug.Sprites.Head[f], SlugPug.BodyParts[0][0], SlugPug.BodyParts[0][1]);
+    }
+    
+    // Draw Tail Animation
+    if (SlugPug.Animations.Tail != null) {
+        var lastPos = SlugPug.BodyParts.length - 1;
+        var f = SlugPug.Animations.Tail.getKeyFrame(SlugPug.Poop.stateTime);
+        SlugPug.drawSprite(SlugPug.Sprites.Tail[f], SlugPug.BodyParts[lastPos][0], SlugPug.BodyParts[lastPos][1]);
+    }
     
     // Draw Body Parts
     for (var i = 1; i < lastPos; i++) {
