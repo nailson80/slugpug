@@ -6,6 +6,10 @@ var SlugPug = SlugPug || {
     Score: 0,
     ScoreIncrement: 10,
     Context: null,
+    AudioClips: {
+        collect: null,
+        poop: null
+    },
     Sprites: {
         Body: null,
         Head: [],
@@ -65,6 +69,22 @@ var SlugPug = SlugPug || {
         if (SlugPug.Context == null || sprite == null) return;
         
         SlugPug.Context.drawImage(sprite.img, sprite.x, sprite.y, sprite.width, sprite.height, x * sprite.width, y * sprite.height, sprite.width, sprite.height);
+    },
+    drawRotatedSprite: function(sprite, x, y, angle) {
+        var TO_RADIANS = Math.PI/180;
+        SlugPug.Context.save();
+        SlugPug.Context.translate((x * sprite.width)+sprite.width/2, (y * sprite.height) + sprite.height/2);
+        SlugPug.Context.rotate(angle * TO_RADIANS);
+        
+        SlugPug.Context.drawImage(sprite.img, sprite.x, sprite.y, sprite.width, sprite.height, 
+                                  -sprite.width/2, -sprite.height/2, 
+                                  sprite.width, sprite.height);
+        
+        //SlugPug.Context.rotate(-angle * TO_RADIANS);
+        //SlugPug.Context.translate(-(x * sprite.width)-sprite.width/2, -(y * sprite.height) - sprite.height/2);
+        
+        SlugPug.Context.restore();
+        
     },
     gameStates: function() {
         return {Running: 0, Paused: 1, GameOver: 2};
@@ -136,9 +156,16 @@ function init() {
     SlugPug.Animations.Head = new SlugPug.Animation(.2, SlugPug.Sprites.Head);
     SlugPug.Animations.Tail = new SlugPug.Animation(.2, SlugPug.Sprites.Tail);
     
+    // Create sound effects
+    SlugPug.AudioClips.collect = new Audio("audio/bark.ogg");
+    SlugPug.AudioClips.poop = new Audio("audio/stinky.ogg");
+    
     SlugPug.GameState = SlugPug.gameStates().Paused;
     SlugPug.LastTimeStamp = getTimeStamp();
     SlugPug.Initialized = true;
+    
+    // Now that everything is initialized, start the main loop
+    main();
 }
 
 function drawFrame() {
@@ -149,6 +176,7 @@ function drawFrame() {
     
     // Draw Treat
     SlugPug.drawSprite(SlugPug.Sprites.Treats[0],SlugPug.Treat.x, SlugPug.Treat.y);
+    SlugPug.drawRotatedSprite(SlugPug.Sprites.Treats[1],1,0,45);
     
     // Draw Poop Animation
     if (SlugPug.Animations.Poop != null) {
@@ -166,7 +194,8 @@ function drawFrame() {
     if (SlugPug.Animations.Tail != null) {
         var lastPos = SlugPug.BodyParts.length - 1;
         var f = SlugPug.Animations.Tail.getKeyFrame(SlugPug.Poop.stateTime);
-        SlugPug.drawSprite(SlugPug.Sprites.Tail[f], SlugPug.BodyParts[lastPos][0], SlugPug.BodyParts[lastPos][1]);
+        //SlugPug.drawSprite(SlugPug.Sprites.Tail[f], SlugPug.BodyParts[lastPos][0], SlugPug.BodyParts[lastPos][1]);
+        SlugPug.drawRotatedSprite(SlugPug.Sprites.Tail[f], SlugPug.BodyParts[lastPos][0], SlugPug.BodyParts[lastPos][1], getTailRotation());
     }
     
     // Draw Body Parts
@@ -193,6 +222,35 @@ function moveUp() {
 function moveDown() {
     SlugPug.PreviousDirection = SlugPug.CurrentDirection;
     SlugPug.CurrentDirection = SlugPug.Direction.Down;
+}
+
+function getTailRotation() {
+    var rotation = 0;
+    var partCount = SlugPug.BodyParts.length;
+    var tailPos = SlugPug.BodyParts[partCount-1];
+    var endPos = SlugPug.BodyParts[partCount-2];
+    
+    var tX = tailPos[0] - endPos[0];
+    var tY = tailPos[1] - endPos[1];
+    
+    if (tX == 0 && tY == 1) {
+        //tailDirection = TailDirection.Down;
+        rotation = 0;
+    }
+    if (tX == 0 && tY == -1) {
+        //tailDirection = TailDirection.Up;
+        rotation = 180;
+    }
+    if (tX == 1 && tY == 0) {
+        //tailDirection = TailDirection.Left;
+        rotation = -90;
+    }
+    if (tX == -1 && tY == 0) {
+        //tailDirection = TailDirection.Right;
+        rotation = 90;
+    }
+    
+    return rotation;
 }
 
 function advanceDog(deltaTime) {
@@ -237,6 +295,7 @@ function advanceDog(deltaTime) {
         
         // Check for collision with treat
         if (head[0] == SlugPug.Treat.x && head[1] == SlugPug.Treat.y) {
+            SlugPug.AudioClips.collect.play();
             SlugPug.Score += SlugPug.ScoreIncrement;
             SlugPug.Treat = placeObject();
             SlugPug.BodyParts.push([]);
@@ -352,14 +411,10 @@ window.main = function () {
     window.requestAnimationFrame( main );
 };
 
-main(); //Start the cycle.
-
 function update(deltaTime) {
     SlugPug.Poop.stateTime += deltaTime;
     advanceDog(deltaTime);
     drawFrame();
-    //if (window.anim != undefined)
-    //    console.log(window.anim.getKeyFrame(deltaTime));
 }
 
 window.addEventListener("DOMContentLoaded", function() {
