@@ -296,17 +296,27 @@ function advanceDog(deltaTime) {
         
         // Check for collision with treat
         if (head[0] == SlugPug.Treat.x && head[1] == SlugPug.Treat.y) {
-            SlugPug.AudioClips.collect.play();
-            SlugPug.Score += SlugPug.ScoreIncrement;
-            SlugPug.Treat = placeObject();
-            SlugPug.BodyParts.push([]);
-            console.log(SlugPug.Score);
-            
-            // Speed up the game
-            if (SlugPug.Score % SlugPug.SpeedIncrementScore == 0 && SlugPug.Tick.CurrentTick - SlugPug.Tick.Decrement > 0) {
-                SlugPug.Tick.CurrentTick -= SlugPug.Tick.Decrement;
-            }
+            collectTreat();
+            incrementSpeed();
         }
+    }
+}
+
+function collectTreat() {
+    SlugPug.AudioClips.collect.play();
+    SlugPug.Score += SlugPug.ScoreIncrement;
+    SlugPug.Treat = placeObject();
+    // TODO: push the new body part to the correct place
+    // in the array. The first time the new body part is
+    // draw it is at the 0,0 coordinates. Not good!
+    SlugPug.BodyParts.push([]);
+    console.log(SlugPug.Score);
+}
+
+function incrementSpeed() {
+    // Speed up the game if the score has reached the specified increment
+    if (SlugPug.Score % SlugPug.SpeedIncrementScore == 0 && SlugPug.Tick.CurrentTick - SlugPug.Tick.Decrement > 0) {
+        SlugPug.Tick.CurrentTick -= SlugPug.Tick.Decrement;
     }
 }
 
