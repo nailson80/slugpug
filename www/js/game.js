@@ -5,6 +5,7 @@ var SlugPug = SlugPug || {
     GameState: null,
     Score: 0,
     ScoreIncrement: 10,
+    SpeedIncrementScore: 100,
     Context: null,
     AudioClips: {
         collect: null,
@@ -234,19 +235,19 @@ function getTailRotation() {
     var tY = tailPos[1] - endPos[1];
     
     if (tX == 0 && tY == 1) {
-        //tailDirection = TailDirection.Down;
+        // Down
         rotation = 0;
     }
     if (tX == 0 && tY == -1) {
-        //tailDirection = TailDirection.Up;
+        // Up
         rotation = 180;
     }
     if (tX == 1 && tY == 0) {
-        //tailDirection = TailDirection.Left;
+        // Left
         rotation = -90;
     }
     if (tX == -1 && tY == 0) {
-        //tailDirection = TailDirection.Right;
+        // Right
         rotation = 90;
     }
     
@@ -300,6 +301,11 @@ function advanceDog(deltaTime) {
             SlugPug.Treat = placeObject();
             SlugPug.BodyParts.push([]);
             console.log(SlugPug.Score);
+            
+            // Speed up the game
+            if (SlugPug.Score % SlugPug.SpeedIncrementScore == 0 && SlugPug.Tick.CurrentTick - SlugPug.Tick.Decrement > 0) {
+                SlugPug.Tick.CurrentTick -= SlugPug.Tick.Decrement;
+            }
         }
     }
 }
@@ -400,9 +406,6 @@ SlugPug.Animation = function(frameDuration, keyFrames) {
 
 window.main = function () {
     //Whatever your main loop needs to do.
-    //setTimeout(function() {  
-    //}, 1000 / 16);
-    
     var deltaTime = (getTimeStamp() - SlugPug.LastTimeStamp)
     SlugPug.LastTimeStamp = getTimeStamp();
     SlugPug.DeltaTime = deltaTime;
